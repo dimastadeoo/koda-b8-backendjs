@@ -3,6 +3,7 @@ import * as Response from "../lib/response.js";
 import { constants } from "node:http2";
 import libJwt from '../lib/jwt.js';
 import bcrypt from "bcrypt";
+import { createProfile } from '../models/profileModels.js';
 
 const saltRounds = 10;
 /**
@@ -24,8 +25,9 @@ export async function register(req, res) {
 
     }
     const hashedPassword = await bcrypt.hash(password, saltRounds);
-    const user = await createUser(name, email, hashedPassword);
-    const results = { name: user.name, email: user.email };
+    const user = await createUser(email, hashedPassword);
+    const profile = await createProfile(user.id, name)
+    const results = { name: profile.name, email: user.email };
 
     Response.successResponse(res, 'User registered successfully', results, constants.HTTP_STATUS_CREATED);
 
