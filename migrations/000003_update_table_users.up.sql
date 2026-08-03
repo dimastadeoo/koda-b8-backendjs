@@ -1,0 +1,2 @@
+ALTER TABLE "users" ADD COLUMN "hp_number" VARCHAR(20) UNIQUE;
+ALTER TABLE "users" DROP COLUMN name;

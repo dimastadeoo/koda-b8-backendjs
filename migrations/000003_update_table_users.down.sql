@@ -1,0 +1,2 @@
+ALTER TABLE "users" ADD COLUMN name VARCHAR(100);
+ALTER TABLE "users" DROP COLUMN hp_number;
