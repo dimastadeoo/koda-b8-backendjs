@@ -1,0 +1,26 @@
+{
+  "dependencies": {
+    "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3",
+    "pg": "^8.22.0"
+  },
+  "name": "backendjs",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dimastadeoo/koda-b8-backendjs.git"
+  },
+  "keywords": [],
+  "author": "dimastadeoo",
+  "license": "MIT",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/dimastadeoo/koda-b8-backendjs/issues"
+  },
+  "homepage": "https://github.com/dimastadeoo/koda-b8-backendjs#readme"
+}
