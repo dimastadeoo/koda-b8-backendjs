@@ -6,6 +6,7 @@ import profileRouter from './profileRoutes.js'
 import addressRouter from './addressRoutes.js'
 import productRouter from './productsRoutes.js'
 import reviewsRouter from './reviewsRoutes.js'
+import wishlistRouter from './whislistRoutes.js'
 
 const options = {
   definition: {
@@ -91,7 +92,19 @@ const options = {
               }
             }
           ]
-        }
+        },
+        Review: {
+          type: "object",
+          properties: {
+            id: { type: "integer" },
+            id_product: { type: "integer" },
+            id_user: { type: "integer" },
+            stars: { type: "integer" },
+            review: { type: "string", nullable: true },
+            created_at: { type: "string", format: "date-time" },
+            updated_at: { type: "string", format: "date-time" }
+          }
+        },
       },
     }
   },
@@ -109,6 +122,7 @@ router.use("/profile", profileRouter);
 router.use("/addresses", addressRouter);
 router.use('/products', productRouter);
 router.use('/reviews', reviewsRouter);
+router.use('/wishlist', wishlistRouter);
 
 
 export default router;
