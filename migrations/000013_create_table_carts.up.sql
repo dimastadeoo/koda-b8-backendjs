@@ -1,0 +1,6 @@
+CREATE TABLE "carts" (
+    "id"          BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    "id_user"     BIGINT NOT NULL REFERENCES "users"("id") ON DELETE CASCADE,
+    "created_at"  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    "updated_at"  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
