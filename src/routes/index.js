@@ -8,6 +8,8 @@ import productRouter from './productsRoutes.js'
 import reviewsRouter from './reviewsRoutes.js'
 import wishlistRouter from './whislistRoutes.js'
 import cartRouter from "./cartRoutes.js";
+import checkoutRouter from "./checkoutRoutes.js";
+import orderRouter from "./ordersRoutes.js";
 
 const options = {
   definition: {
@@ -125,6 +127,8 @@ router.use('/products', productRouter);
 router.use('/reviews', reviewsRouter);
 router.use('/wishlist', wishlistRouter);
 router.use('/cart', cartRouter);
+router.use('/checkout', checkoutRouter);
+router.use('/orders', orderRouter);
 
 
 export default router;
