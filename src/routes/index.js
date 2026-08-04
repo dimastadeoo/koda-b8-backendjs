@@ -7,6 +7,7 @@ import addressRouter from './addressRoutes.js'
 import productRouter from './productsRoutes.js'
 import reviewsRouter from './reviewsRoutes.js'
 import wishlistRouter from './whislistRoutes.js'
+import cartRouter from "./cartRoutes.js";
 
 const options = {
   definition: {
@@ -123,6 +124,7 @@ router.use("/addresses", addressRouter);
 router.use('/products', productRouter);
 router.use('/reviews', reviewsRouter);
 router.use('/wishlist', wishlistRouter);
+router.use('/cart', cartRouter);
 
 
 export default router;
