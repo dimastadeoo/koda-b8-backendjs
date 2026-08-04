@@ -23,6 +23,8 @@ try {
   process.exit(1);
 }
 
+app.use('/uploads', express.static('uploads'));
+
 // arahkan ke routes
 app.use(router);
 
