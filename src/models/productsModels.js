@@ -75,7 +75,12 @@ export async function getProducts({ filters, search, sort, limit, offset }) {
         json_agg(DISTINCT jsonb_build_object('id', c.id, 'name', c.name)) 
         FILTER (WHERE c.id IS NOT NULL), 
         '[]'
-      ) as categories
+      ) as categories,
+      (
+        SELECT url_img FROM img_product 
+        WHERE id_product = p.id AND is_primary = true 
+        ORDER BY sort_order LIMIT 1
+      ) as primary_image
     FROM products p
     LEFT JOIN merks m ON p.id_merk = m.id
     LEFT JOIN product_categorie pc ON p.id = pc.id_product
