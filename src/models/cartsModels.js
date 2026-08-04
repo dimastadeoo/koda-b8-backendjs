@@ -28,7 +28,7 @@ export async function getCartItems(cartId) {
       cl.qty,
       cl.status,
       cl.created_at as added_at,
-      p.id, p.name, p.price, p.stock, p.description,
+      p.id, p.name as product_name, p.price, p.stock, p.description,
       m.id as merk_id, m.name as merk_name,
       (
         SELECT url_img FROM img_product 
@@ -38,7 +38,7 @@ export async function getCartItems(cartId) {
     FROM carts_list cl
     JOIN products p ON cl.id_product = p.id
     LEFT JOIN merks m ON p.id_merk = m.id
-    WHERE cl.id_cart = $1
+    WHERE cl.id_cart = $1 AND cl.status = 'active'
     ORDER BY cl.created_at DESC
   `;
   const result = await pool.query(query, [cartId]);
