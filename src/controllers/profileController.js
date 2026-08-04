@@ -39,7 +39,7 @@ export async function getProfile(req, res) {
 export async function updateProfile(req, res) {
   try {
     const userId = req.user.userId;
-    const { name, gender, place_birth, date_birth, no_hp } = req.body;
+    const { name, gender, place_birth, date_birth, hp_number } = req.body;
 
     // Validasi: name wajib
     if (!name) {
@@ -54,17 +54,17 @@ export async function updateProfile(req, res) {
     try {
       await client.query('BEGIN');
 
-      // 1. Update no_hp di users jika diberikan
+      // 1. Update hp_number di users jika diberikan
       let updatedUser = null;
-      if (no_hp !== undefined) {
-        // Cek duplikat no_hp (kecuali milik sendiri)
-        const existingUser = await userModel.findByNoHp(no_hp, client);
+      if (hp_number !== undefined) {
+        // Cek duplikat hp_number (kecuali milik sendiri)
+        const existingUser = await userModel.findByNoHp(hp_number, client);
         if (existingUser && existingUser.id !== userId) {
           await client.query('ROLLBACK');
           return Response.errorResponse(res, "No HP already used by another user", constants.HTTP_STATUS_BAD_REQUEST);
         }
-        // Update no_hp
-        updatedUser = await userModel.updateUserPhone(userId, no_hp, client);
+        // Update hp_number
+        updatedUser = await userModel.updateUserPhone(userId, hp_number, client);
       }
 
       // 2. Update atau create profile
