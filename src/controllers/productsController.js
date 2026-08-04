@@ -1,6 +1,7 @@
 import * as productModel from "../models/productsModels.js";
 import * as Response from "../lib/response.js";
 import * as ImageProductModel from "../models/productImageModels.js"
+import * as reviewModel from "../models/reviewsModels.js";
 import { constants } from "node:http2";
 
 /**
@@ -93,18 +94,21 @@ export async function getProductById(req, res) {
     try {
         const { id } = req.params;
         const product = await productModel.getProductById(id);
-        // console.log(product)
+       
         if (!product) {
             return Response.errorResponse(res, 'Product not found', constants.HTTP_STATUS_NOT_FOUND);
         }
         
         // Ambil gambar produk dari model imgProduct
         const images = await ImageProductModel.getProductImages(id);
+        const ratingStats = await reviewModel.getProductRatingStats(id);
 
         // Gabungkan hasil
         const result = {
           ...product,
-          images, // tambahkan array images
+          images,
+          average_rating: parseFloat(ratingStats.avg_rating),
+          total_reviews: parseInt(ratingStats.total_reviews, 10),
         };
 
         Response.successResponse(res, 'Product retrieved successfully', result);
