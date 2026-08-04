@@ -5,6 +5,7 @@ import swaggerUi from 'swagger-ui-express';
 import profileRouter from './profileRoutes.js'
 import addressRouter from './addressRoutes.js'
 import productRouter from './productsRoutes.js'
+import reviewsRouter from './reviewsRoutes.js'
 
 const options = {
   definition: {
@@ -107,6 +108,7 @@ router.use('/auth', authRoutes);
 router.use("/profile", profileRouter);
 router.use("/addresses", addressRouter);
 router.use('/products', productRouter);
+router.use('/reviews', reviewsRouter);
 
 
 export default router;
