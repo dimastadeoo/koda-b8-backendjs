@@ -1,5 +1,6 @@
 import * as productModel from "../models/productsModels.js";
 import * as Response from "../lib/response.js";
+import * as ImageProductModel from "../models/productImageModels.js"
 import { constants } from "node:http2";
 
 /**
@@ -92,10 +93,21 @@ export async function getProductById(req, res) {
     try {
         const { id } = req.params;
         const product = await productModel.getProductById(id);
+        // console.log(product)
         if (!product) {
             return Response.errorResponse(res, 'Product not found', constants.HTTP_STATUS_NOT_FOUND);
         }
-        Response.successResponse(res, 'Product retrieved successfully', product);
+        
+        // Ambil gambar produk dari model imgProduct
+        const images = await ImageProductModel.getProductImages(id);
+
+        // Gabungkan hasil
+        const result = {
+          ...product,
+          images, // tambahkan array images
+        };
+
+        Response.successResponse(res, 'Product retrieved successfully', result);
     } catch (error) {
         console.error(error);
         Response.errorResponse(res, 'Failed to get product', constants.HTTP_STATUS_INTERNAL_SERVER_ERROR);
