@@ -64,6 +64,7 @@ export async function getReviewsByProduct(productId, limit = 10, offset = 0) {
     LIMIT $2 OFFSET $3
   `;
   const result = await pool.query(query, [productId, limit, offset]);
+  console.log(result.rows)
   return result.rows;
 }
 
@@ -80,15 +81,4 @@ export async function getProductRatingStats(productId) {
     [productId]
   );
   return result.rows[0];
-}
-
-/**
- * Check if user has already reviewed a product
- */
-export async function hasUserReviewed(productId, userId) {
-  const result = await pool.query(
-    `SELECT id FROM reviews WHERE id_product = $1 AND id_user = $2`,
-    [productId, userId]
-  );
-  return result.rows.length > 0;
 }
