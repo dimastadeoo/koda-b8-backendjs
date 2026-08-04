@@ -1,5 +1,6 @@
 import * as cartModel from "../models/cartsModels.js";
 import * as Response from "../lib/response.js";
+import { getProductById } from "../models/productsModels.js";
 import { constants } from "node:http2";
 
 /**
@@ -38,6 +39,15 @@ export async function addToCart(req, res) {
       return Response.errorResponse(res, 'qty must be at least 1', constants.HTTP_STATUS_BAD_REQUEST);
     }
 
+    // Sebelum menambahkan, cek stok produk
+    const product = await getProductById(productId); 
+    if (!product) {
+      return Response.errorResponse(res, 'Product not found', constants.HTTP_STATUS_NOT_FOUND);
+    }
+    if (product.stock < qty) {
+      return Response.errorResponse(res, 'Insufficient stock', constants.HTTP_STATUS_BAD_REQUEST);
+    }
+
     // Get or create cart
     const cart = await cartModel.getOrCreateCart(userId);
     const item = await cartModel.addItemToCart(cart.id, productId, qty);
@@ -71,6 +81,16 @@ export async function updateCartItem(req, res) {
 
     if (qty === undefined || qty < 0) {
       return Response.errorResponse(res, 'qty must be provided and >= 0', constants.HTTP_STATUS_BAD_REQUEST);
+    }
+
+    // Saat update qty, cek stok yang tersedia
+    const product = await getProductById(productId);
+    if (!product) {
+      return Response.errorResponse(res, 'Product not found', constants.HTTP_STATUS_NOT_FOUND);
+    }
+    // Jika qty baru > stok, tolak
+    if (qty > product.stock) {
+      return Response.errorResponse(res, 'Quantity exceeds available stock', constants.HTTP_STATUS_BAD_REQUEST);
     }
 
     const cart = await cartModel.getOrCreateCart(userId);
@@ -141,6 +161,13 @@ export async function updateItemStatus(req, res) {
 
     Response.successResponse(res, 'Item status updated', updated);
   } catch (error) {
+    if (error.message === 'Invalid status') {
+      return Response.errorResponse(
+        res,
+        'Invalid status value',
+        constants.HTTP_STATUS_BAD_REQUEST
+      );
+    }
     console.error(error);
     Response.errorResponse(res, 'Failed to update item status', constants.HTTP_STATUS_INTERNAL_SERVER_ERROR);
   }
