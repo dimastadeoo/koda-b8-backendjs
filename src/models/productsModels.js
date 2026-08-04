@@ -80,7 +80,13 @@ export async function getProducts({ filters, search, sort, limit, offset }) {
         SELECT url_img FROM img_product 
         WHERE id_product = p.id AND is_primary = true 
         ORDER BY sort_order LIMIT 1
-      ) as primary_image
+      ) as primary_image,
+      COALESCE(
+        (SELECT AVG(stars) FROM reviews WHERE id_product = p.id), 0
+      )::float as average_rating,
+      COALESCE(
+        (SELECT COUNT(*) FROM reviews WHERE id_product = p.id), 0
+      )::int as total_reviews
     FROM products p
     LEFT JOIN merks m ON p.id_merk = m.id
     LEFT JOIN product_categorie pc ON p.id = pc.id_product
