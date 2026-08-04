@@ -251,6 +251,98 @@ router.get("/merks", getMerks);
  */
 router.get("/categories", getCategories);
 
+/**
+ * @openapi
+ * /products/{id}/reviews:
+ *   get:
+ *     tags:
+ *       - Products
+ *       - Reviews
+ *     summary: Get reviews for a product
+ *     description: Retrieve all reviews for a specific product with pagination and rating statistics. Public endpoint.
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Product ID
+ *         example: 1
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: Page number for pagination
+ *         example: 1
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *         description: Number of items per page
+ *         example: 10
+ *     responses:
+ *       200:
+ *         description: Reviews retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Reviews retrieved successfully
+ *                 results:
+ *                   type: object
+ *                   properties:
+ *                     reviews:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           id:
+ *                             type: integer
+ *                           stars:
+ *                             type: integer
+ *                           review:
+ *                             type: string
+ *                             nullable: true
+ *                           created_at:
+ *                             type: string
+ *                             format: date-time
+ *                           updated_at:
+ *                             type: string
+ *                             format: date-time
+ *                           user_id:
+ *                             type: integer
+ *                           user_email:
+ *                             type: string
+ *                           user_name:
+ *                             type: string
+ *                     stats:
+ *                       type: object
+ *                       properties:
+ *                         avg_rating:
+ *                           type: number
+ *                           format: float
+ *                         total_reviews:
+ *                           type: integer
+ *                     pagination:
+ *                       type: object
+ *                       properties:
+ *                         page:
+ *                           type: integer
+ *                         limit:
+ *                           type: integer
+ *       404:
+ *         description: Product not found
+ *       500:
+ *         description: Internal server error
+ */
 router.get("/:id/reviews", getProductReviews);
 
 export default router;
