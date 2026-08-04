@@ -3,8 +3,9 @@ import * as Response from "../lib/response.js";
 import { constants } from "node:http2";
 
 /**
- * POST /reviews
- * Create a new review
+ * 
+ * @param {import("express").Request} req 
+ * @param {import("express").Response} res 
  */
 export async function createReview(req, res) {
   try {
@@ -57,8 +58,9 @@ export async function createReview(req, res) {
 }
 
 /**
- * PATCH /reviews/:id
- * Update a review
+ * 
+ * @param {import("express").Request} req 
+ * @param {import("express").Response} res 
  */
 export async function updateReview(req, res) {
   try {
@@ -114,8 +116,9 @@ export async function updateReview(req, res) {
 }
 
 /**
- * DELETE /reviews/:id
- * Delete a review
+ * 
+ * @param {import("express").Request} req 
+ * @param {import("express").Response} res 
  */
 export async function deleteReview(req, res) {
   try {
@@ -148,8 +151,9 @@ export async function deleteReview(req, res) {
 }
 
 /**
- * GET /products/:id/reviews
- * Get all reviews for a product (public)
+ * 
+ * @param {import("express").Request} req 
+ * @param {import("express").Response} res 
  */
 export async function getProductReviews(req, res) {
   try {
