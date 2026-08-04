@@ -3,6 +3,7 @@ import router from './src/routes/index.js';
 import corsMiddleware from './src/middlewares/corsMiddleware.js';
 import {constants} from "node:http2";
 import pool from './src/lib/conn.js';
+import qs from 'qs'
 
 const app = express();
 // eslint-disable-next-line no-undef
@@ -27,6 +28,10 @@ app.use('/uploads', express.static('uploads'));
 
 // arahkan ke routes
 app.use(router);
+
+app.set('query parser', function (str) {
+  return qs.parse(str);
+});
 
 // Route default
 app.get('/', (req, res) => {
