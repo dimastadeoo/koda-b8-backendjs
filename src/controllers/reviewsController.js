@@ -28,16 +28,6 @@ export async function createReview(req, res) {
       );
     }
 
-    // Cek apakah user sudah pernah review produk ini
-    const alreadyReviewed = await reviewModel.hasUserReviewed(productId, userId);
-    if (alreadyReviewed) {
-      return Response.errorResponse(
-        res,
-        'You have already reviewed this product',
-        constants.HTTP_STATUS_BAD_REQUEST
-      );
-    }
-
     const newReview = await reviewModel.createReview(
       productId,
       userId,
