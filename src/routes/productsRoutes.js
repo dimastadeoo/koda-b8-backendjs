@@ -5,6 +5,7 @@ import {
     getMerks,
     getCategories,
 } from "../controllers/productsController.js";
+import { getProductReviews } from "../controllers/reviewsController.js";
 
 const router = Router();
 
@@ -249,5 +250,7 @@ router.get("/merks", getMerks);
  *         description: Internal server error
  */
 router.get("/categories", getCategories);
+
+router.get("/:id/reviews", getProductReviews);
 
 export default router;
