@@ -57,7 +57,7 @@ export async function login(req, res) {
     }
     
     const token = libJwt.sign({userId: user.id});
-    const results = { token: token, user: { id: user.id, email: user.email } };
+    const results = { token: token, user: { email: user.email } };
     Response.successResponse(res, `User ${user.email} Login successfully`, results);
 
   } catch (error) {
