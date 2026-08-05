@@ -7,7 +7,8 @@ import qs from 'qs'
 
 const app = express();
 // eslint-disable-next-line no-undef
-const PORT = process.env.PORT_BACKEND || 8080;
+const BACKEND_HOST = process.env.BACKEND_HOST || 'http://localhost'
+const BACKEND_PORT = process.env.BACKEND_PORT || '8080';
 
 app.use(express.json());
 app.use(express.urlencoded());
@@ -48,6 +49,6 @@ app.all("{*all}", function (req, res) {
   });
 });
 
-app.listen(PORT, () => {
-  console.log(`Backend running on http://localhost:${PORT}`);
+app.listen(BACKEND_PORT, () => {
+  console.log(`Backend running on ${BACKEND_HOST}:${BACKEND_PORT}`);
 });
