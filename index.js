@@ -38,7 +38,7 @@ app.set('query parser', function (str) {
 app.get('/', (req, res) => {
   res.json({ 
     success: true, 
-    message: 'Backend is running' 
+    message: 'Backend is Normal Running' 
   });
 });
 
