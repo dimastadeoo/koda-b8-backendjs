@@ -1,0 +1,59 @@
+name: Automation build images
+run-name: ${{github.event.head_commit.message}}
+
+on:
+  push:
+    # Sequence of patterns matched against refs/tags
+    tags:
+      - 'v*'
+
+jobs:
+  rules-tag:
+    name: "check tag"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Validate SemVer standard
+        run: |
+            TAG_NAME=${GITHUB_REF#refs/tags/} 
+            SEMVER_REGEX="^v([0-9]+)\.([0-9]+)\.([0-9]+)(-[a-zA-Z0-9.-]+)?(\+[a-zA-Z0-9.-]+)?$"
+            
+            if [[ ! "$TAG_NAME" =~ $SEMVER_REGEX ]]; then 
+              echo "Error: Tag $TAG_NAME tidak sesuai dengan standar SemVer!" 
+              exit 1 
+            else 
+              echo "Tag $TAG_NAME valid menggunakan standar SemVer." 
+            fi
+  build-docker-image:
+    needs: rules-tag
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Login to DockerHub
+        run: echo -n ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Build Docker image
+        run: docker build . -t ghcr.io/${{github.repository}}:latest
+
+      - name: Push to ghcr.io
+        run: docker push ghcr.io/${{github.repository}}:latest
+  deploy-image:
+    name: "Deploy image into server"
+    needs: build-docker-image
+    runs-on: ubuntu-latest
+    steps:
+      - name: Pull image from ghcr
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{secrets.SSH_HOST}}
+          username: ${{secrets.SSH_USER}}
+          port: ${{secrets.SSH_PORT}}
+          key: ${{secrets.SSH_KEY}}
+          script: |
+            cd server
+            docker compose pull backend
+            docker compose up backend -d
