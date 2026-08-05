@@ -125,7 +125,7 @@ export async function getProductById(req, res) {
  */
 export async function getMerks(req, res) {
     try {
-        const merks = await productModel.getAllMerks();
+        const merks = await productModel.getMerks();
         Response.successResponse(res, 'Merks retrieved successfully', merks);
     } catch (error) {
         console.error(error);
@@ -140,7 +140,7 @@ export async function getMerks(req, res) {
  */
 export async function getCategories(req, res) {
     try {
-        const categories = await productModel.getAllCategories();
+        const categories = await productModel.getCategories();
         Response.successResponse(res, 'Categories retrieved successfully', categories);
     } catch (error) {
         console.error(error);
