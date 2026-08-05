@@ -8,9 +8,9 @@ import { constants } from "node:http2";
  */
 function corsMiddleware(req, res, next) {
   // eslint-disable-next-line no-undef
-  const PORT = process.env.PORT_FRONTEND || 5173;
+  const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
 
-  res.setHeader("Access-Control-Allow-Origin", "http://localhost:" + PORT);
+  res.setHeader("Access-Control-Allow-Origin", FRONTEND_URL);
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS, PATCH, DELETE");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Origin, Authorization");
 
