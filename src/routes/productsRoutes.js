@@ -122,44 +122,7 @@ const router = Router();
  */
 router.get("", getProducts);
 
-/**
- * @openapi
- * /products/{id}:
- *   get:
- *     tags:
- *       - Products
- *     summary: Get product by ID
- *     description: Retrieve detailed information about a specific product including specifications.
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *         description: Product ID
- *         example: 1
- *     responses:
- *       200:
- *         description: Product retrieved successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 message:
- *                   type: string
- *                   example: Product retrieved successfully
- *                 results:
- *                   $ref: '#/components/schemas/ProductDetail'
- *       404:
- *         description: Product not found
- *       500:
- *         description: Internal server error
- */
-router.get("/:id", getProductById);
+
 
 /**
  * @openapi
@@ -344,5 +307,44 @@ router.get("/categories", getCategories);
  *         description: Internal server error
  */
 router.get("/:id/reviews", getProductReviews);
+
+/**
+ * @openapi
+ * /products/{id}:
+ *   get:
+ *     tags:
+ *       - Products
+ *     summary: Get product by ID
+ *     description: Retrieve detailed information about a specific product including specifications.
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Product ID
+ *         example: 1
+ *     responses:
+ *       200:
+ *         description: Product retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Product retrieved successfully
+ *                 results:
+ *                   $ref: '#/components/schemas/ProductDetail'
+ *       404:
+ *         description: Product not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get("/:id", getProductById);
 
 export default router;
