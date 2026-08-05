@@ -41,19 +41,19 @@ jobs:
 
       - name: Push to ghcr.io
         run: docker push ghcr.io/${{github.repository}}:latest
-  # deploy-image:
-  #   name: "Deploy image into server"
-  #   needs: build-docker-image
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: Pull image from ghcr
-  #       uses: appleboy/ssh-action@v1
-  #       with:
-  #         host: ${{secrets.SSH_HOST}}
-  #         username: ${{secrets.SSH_USER}}
-  #         port: ${{secrets.SSH_PORT}}
-  #         key: ${{secrets.SSH_KEY}}
-  #         script: |
-  #           cd server
-  #           docker compose pull backend
-  #           docker compose up backend -d
+  deploy-image:
+    name: "Deploy image into server"
+    needs: build-docker-image
+    runs-on: ubuntu-latest
+    steps:
+      - name: Pull image from ghcr
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{secrets.SSH_HOST}}
+          username: ${{secrets.SSH_USER}}
+          port: ${{secrets.SSH_PORT}}
+          key: ${{secrets.SSH_KEY}}
+          script: |
+            cd server
+            docker compose pull backend
+            docker compose up backend -d
