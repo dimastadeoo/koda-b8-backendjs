@@ -108,6 +108,44 @@ const options = {
             updated_at: { type: "string", format: "date-time" }
           }
         },
+        OrderDetail: {
+          type: "object",
+          properties: {
+            id: { type: "integer" },
+            id_cart: { type: "integer" },
+            id_shipping: { type: "integer", nullable: true },
+            id_payment: { type: "integer", nullable: true },
+            id_voucher: { type: "integer", nullable: true },
+            address: { type: "string", nullable: true },
+            subtotal: { type: "integer", nullable: true },
+            discount: { type: "integer", nullable: true },
+            shipping_cost: { type: "integer", nullable: true },
+            total_payment: { type: "integer", nullable: true },
+            status: { type: "string", enum: ["in_progress", "pending", "paid", "shipping", "delivered", "canceled", "refunded"] },
+            checkout_step: { type: "string", enum: ["init", "address", "shipping", "payment", "done"] },
+            created_at: { type: "string", format: "date-time" },
+            updated_at: { type: "string", format: "date-time" },
+            shipping_name: { type: "string" },
+            shipping_price: { type: "integer" },
+            payment_name: { type: "string" },
+            payment_type: { type: "string" },
+            voucher_code: { type: "string", nullable: true },
+            voucher_type: { type: "string", nullable: true },
+            voucher_value: { type: "integer", nullable: true },
+            items: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  id_product: { type: "integer" },
+                  product_name_snapshot: { type: "string" },
+                  price_snapshot: { type: "integer" },
+                  qty: { type: "integer" }
+                }
+              }
+            }
+          }
+        }
       },
     }
   },
