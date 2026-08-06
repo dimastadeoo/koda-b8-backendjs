@@ -24,11 +24,11 @@ export async function getOrCreateCart(userId) {
 export async function getCartItems(cartId) {
   const query = `
     SELECT 
-      cl.id_product,
+      c.id as id_cart,
       cl.qty,
       cl.status,
       cl.created_at as added_at,
-      p.id, p.name as product_name, p.price, p.stock, p.description,
+      p.id as id_product, p.name as product_name, p.price, p.stock, p.description,
       m.id as merk_id, m.name as merk_name,
       (
         SELECT url_img FROM img_product 
@@ -37,6 +37,7 @@ export async function getCartItems(cartId) {
       ) as primary_image
     FROM carts_list cl
     JOIN products p ON cl.id_product = p.id
+    JOIN carts c ON c.id = cl.id_cart
     LEFT JOIN merks m ON p.id_merk = m.id
     WHERE cl.id_cart = $1 AND cl.status = 'active'
     ORDER BY cl.created_at DESC
