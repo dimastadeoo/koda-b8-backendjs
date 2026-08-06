@@ -28,6 +28,6 @@ export async function authenticate(req, res, next) {
     req.user = verifToken;
     next();
   }catch{
-    return Response.errorResponse(res, "Unauthorized");
+    return Response.errorResponse(res, "Unauthorized", constants.HTTP_STATUS_UNAUTHORIZED);
   }
 }
