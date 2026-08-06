@@ -130,7 +130,29 @@ export async function updateItemStatus(cartId, productId, status) {
      SET status = $1, updated_at = NOW() 
      WHERE id_cart = $2 AND id_product = $3
      RETURNING *`,
-    [status, cartId, productId]
+    [status, parseInt(cartId), parseInt(productId)]
   );
   return result.rows[0] || null;
+}
+
+// src/models/cartsModels.js (tambahkan fungsi ini)
+
+/**
+ * 
+ * @param {number} cartId
+ * @param {number[]} productIds
+ * @returns {Promise<Array>}
+ */
+export async function restoreCartItems(cartId, productIds) {
+  if (!productIds || productIds.length === 0) return [];
+  const placeholders = productIds.map((_, i) => `$${i + 2}`).join(',');
+  const query = `
+    UPDATE carts_list 
+    SET status = 'active', updated_at = NOW()
+    WHERE id_cart = $1 AND id_product IN (${placeholders})
+    RETURNING *
+  `;
+  const values = [cartId, ...productIds];
+  const result = await pool.query(query, values);
+  return result.rows;
 }
