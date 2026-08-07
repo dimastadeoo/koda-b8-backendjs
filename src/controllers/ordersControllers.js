@@ -134,11 +134,18 @@ export async function createOrder(req, res) {
       return Response.errorResponse(res, 'Cart is empty', constants.HTTP_STATUS_BAD_REQUEST);
     }
 
+    // Hitung subtotal
+    let subtotal = 0;
+    for (const item of cartItems) {
+      subtotal += item.price * item.qty;
+    }
+
     // 3. Buat order dengan status in_progress
     const orderData = {
       id_cart: cart.id,
       status: 'in_progress',
       checkout_step: 'init',
+      subtotal: subtotal
     };
     const order = await ordersModel.createOrder(orderData);
 
@@ -150,6 +157,18 @@ export async function createOrder(req, res) {
       qty: item.qty,
     }));
     await orderItemsModel.createOrderItems(order.id, orderItemsData);
+
+    // Ambil order items
+    const orderItems = await orderItemsModel.getOrderItems(order.id);
+    if (!orderItems || orderItems.length === 0) {
+      return Response.errorResponse(res, 'No items in order', constants.HTTP_STATUS_BAD_REQUEST);
+    }
+
+    // Update status cart items menjadi 'checkout'
+    const productIds = orderItems.map(item => item.id_product);
+    if (order.id_cart) {
+      await cartsModel.updateItemStatus(order.id_cart, productIds, 'checkout');
+    }
 
     Response.successResponse(
       res,

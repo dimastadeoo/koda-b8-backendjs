@@ -7,15 +7,16 @@ export async function createOrder(data) {
   const {
     id_cart,
     status,
-    checkout_step
+    checkout_step,
+    subtotal
   } = data;
 
   const result = await pool.query(
     `INSERT INTO orders 
-     (id_cart, status, checkout_step)
-     VALUES ($1, $2, $3)
+     (id_cart, status, checkout_step, subtotal)
+     VALUES ($1, $2, $3, $4)
      RETURNING *`,
-    [id_cart, status, checkout_step ]
+    [id_cart, status, checkout_step, subtotal ]
   );
   return result.rows[0];
 }

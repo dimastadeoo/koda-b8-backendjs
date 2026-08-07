@@ -30,7 +30,9 @@ export async function createOrderItems(orderId, items) {
  */
 export async function getOrderItems(orderId) {
   const result = await pool.query(
-    'SELECT * FROM order_items WHERE id_order = $1',
+    `SELECT oi.*, ip.url_img as primary_img FROM order_items oi
+    LEFT JOIN img_product ip ON ip.id_product = oi.id_product
+    WHERE oi.id_order = $1 AND ip.is_primary = true`,
     [orderId]
   );
   return result.rows;
