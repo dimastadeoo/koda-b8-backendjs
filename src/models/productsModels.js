@@ -164,3 +164,29 @@ export async function getCategories() {
   const result = await pool.query('SELECT * FROM categories ORDER BY name');
   return result.rows;
 }
+
+export async function createProduct(data) {
+  const { name, price, id_merk, stock, description } = data;
+  const result = await pool.query(
+    `INSERT INTO products (name, price, id_merk, stock, description) 
+     VALUES ($1, $2, $3, $4, $5) RETURNING *`,
+    [name, price, id_merk, stock, description]
+  );
+  return result.rows[0];
+}
+
+export async function updateProduct(id, data) {
+  const { name, price, id_merk, stock, description } = data;
+  const result = await pool.query(
+    `UPDATE products 
+     SET name = $1, price = $2, id_merk = $3, stock = $4, description = $5, updated_at = NOW()
+     WHERE id = $6 RETURNING *`,
+    [name, price, id_merk, stock, description, id]
+  );
+  return result.rows[0];
+}
+
+export async function deleteProduct(id) {
+  const result = await pool.query('DELETE FROM products WHERE id = $1 RETURNING *', [id]);
+  return result.rows[0];
+}
