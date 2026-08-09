@@ -3,6 +3,8 @@ import * as Response from "../lib/response.js";
 import * as ImageProductModel from "../models/productImageModels.js"
 import * as reviewModel from "../models/reviewsModels.js";
 import { constants } from "node:http2";
+import { deleteFile, getUploadPath } from "../lib/uploads.js";
+
 
 /**
  * 
@@ -146,4 +148,194 @@ export async function getCategories(req, res) {
         console.error(error);
         Response.errorResponse(res, 'Failed to get categories', constants.HTTP_STATUS_INTERNAL_SERVER_ERROR);
     }
+}
+
+/**
+ * 
+ * @param {import("express").Request} req 
+ * @param {import("express").Response} res 
+ */
+export async function createProduct(req, res) {
+  try {
+    const { name, price, id_merk, stock, description } = req.body;
+    if (!name || !price) {
+      return Response.errorResponse(res, 'Name and price are required', constants.HTTP_STATUS_BAD_REQUEST);
+    }
+
+    // 1. Create product
+    const product = await productModel.createProduct({
+      name, price, id_merk: id_merk || null, stock: stock || 0, description
+    });
+
+    // 2. Handle uploaded images (if any)
+    const files = req.files || [];
+    if (files.length > 0) {
+      const images = files.map((file, index) => ({
+        url_img: file.filename,
+        sort_order: index,
+        is_primary: index === 0,
+        alt_text: name
+      }));
+      await ImageProductModel.insertProductImages(product.id, images);
+    }
+
+    // 3. Get product with images
+    const productWithImages = await productModel.getProductById(product.id);
+    const images = await ImageProductModel.getProductImages(product.id);
+
+    Response.successResponse(res, 'Product created successfully', {
+      ...productWithImages,
+      images
+    }, constants.HTTP_STATUS_CREATED);
+  } catch (error) {
+    console.error(error);
+    Response.errorResponse(res, 'Failed to create product', constants.HTTP_STATUS_INTERNAL_SERVER_ERROR);
+  }
+}
+
+/**
+ * 
+ * @param {import("express").Request} req 
+ * @param {import("express").Response} res 
+ */
+export async function updateProduct(req, res) {
+  try {
+    const productId = parseInt(req.params.id, 10);
+    if (isNaN(productId)) {
+      return Response.errorResponse(res, 'Invalid product ID', constants.HTTP_STATUS_BAD_REQUEST);
+    }
+
+    const { name, price, id_merk, stock, description } = req.body;
+    if (!name && !price && !id_merk && stock === undefined && !description) {
+      return Response.errorResponse(res, 'At least one field to update', constants.HTTP_STATUS_BAD_REQUEST);
+    }
+
+    const existing = await productModel.getProductById(productId);
+    if (!existing) {
+      return Response.errorResponse(res, 'Product not found', constants.HTTP_STATUS_NOT_FOUND);
+    }
+
+    const updated = await productModel.updateProduct(productId, {
+      name: name || existing.name,
+      price: price || existing.price,
+      id_merk: id_merk !== undefined ? id_merk : existing.id_merk,
+      stock: stock !== undefined ? stock : existing.stock,
+      description: description !== undefined ? description : existing.description
+    });
+
+    const images = await ImageProductModel.getProductImages(productId);
+    Response.successResponse(res, 'Product updated successfully', {
+      ...updated,
+      images
+    });
+  } catch (error) {
+    console.error(error);
+    Response.errorResponse(res, 'Failed to update product', constants.HTTP_STATUS_INTERNAL_SERVER_ERROR);
+  }
+}
+
+/**
+ * 
+ * @param {import("express").Request} req 
+ * @param {import("express").Response} res 
+ */
+export async function deleteProduct(req, res) {
+  try {
+    const productId = parseInt(req.params.id, 10);
+    if (isNaN(productId)) {
+      return Response.errorResponse(res, 'Invalid product ID', constants.HTTP_STATUS_BAD_REQUEST);
+    }
+
+    // Get images first to delete files
+    const images = await ImageProductModel.getProductImages(productId);
+    for (const img of images) {
+      deleteFile(img.url_img); // hapus file dari disk
+    }
+    await ImageProductModel.deleteProductImages(productId);
+    const deleted = await productModel.deleteProduct(productId);
+    if (!deleted) {
+      return Response.errorResponse(res, 'Product not found', constants.HTTP_STATUS_NOT_FOUND);
+    }
+
+    Response.successResponse(res, 'Product deleted successfully', { id: productId });
+  } catch (error) {
+    console.error(error);
+    Response.errorResponse(res, 'Failed to delete product', constants.HTTP_STATUS_INTERNAL_SERVER_ERROR);
+  }
+}
+
+/**
+ * 
+ * @param {import("express").Request} req 
+ * @param {import("express").Response} res 
+ */
+export async function addProductImages(req, res) {
+  try {
+    const productId = parseInt(req.params.id, 10);
+    if (isNaN(productId)) {
+      return Response.errorResponse(res, 'Invalid product ID', constants.HTTP_STATUS_BAD_REQUEST);
+    }
+
+    const existing = await productModel.getProductById(productId);
+    if (!existing) {
+      return Response.errorResponse(res, 'Product not found', constants.HTTP_STATUS_NOT_FOUND);
+    }
+
+    const files = req.files || [];
+    if (files.length === 0) {
+      return Response.errorResponse(res, 'No images uploaded', constants.HTTP_STATUS_BAD_REQUEST);
+    }
+
+    // Get current max sort_order
+    const currentImages = await ImageProductModel.getProductImages(productId);
+    let nextOrder = currentImages.length;
+
+    const primaryCheck = await ImageProductModel.getPrimaryImage(productId)
+
+    let images = files.map((file, index) => ({
+      url_img: file.filename,
+      sort_order: nextOrder + index,
+      is_primary: false, // tidak set primary karena sudah ada
+      alt_text: existing.name
+    }));
+
+    // Jika belum ada primary, jadikan gambar pertama sebagai primary
+    if (!primaryCheck && images.length > 0) {
+      images[0].is_primary = true;
+    }
+
+    const inserted = await ImageProductModel.insertProductImages(productId, images);
+    Response.successResponse(res, 'Images added successfully', inserted);
+  } catch (error) {
+    console.error(error);
+    Response.errorResponse(res, 'Failed to add images', constants.HTTP_STATUS_INTERNAL_SERVER_ERROR);
+  }
+}
+
+/**
+ * 
+ * @param {import("express").Request} req 
+ * @param {import("express").Response} res 
+ */
+export async function deleteProductImage(req, res) {
+  try {
+    const imageId = parseInt(req.params.imageId, 10);
+    if (isNaN(imageId)) {
+      return Response.errorResponse(res, 'Invalid image ID', constants.HTTP_STATUS_BAD_REQUEST);
+    }
+
+    // Get image to delete file
+    const image = await ImageProductModel.getImageById(imageId);
+    if (!image) {
+      return Response.errorResponse(res, 'Image not found', constants.HTTP_STATUS_NOT_FOUND);
+    }
+
+    deleteFile(image.url_img);
+    await ImageProductModel.deleteImageById(imageId);
+
+    Response.successResponse(res, 'Image deleted successfully', { id: imageId });
+  } catch (error) {
+    console.error(error);
+    Response.errorResponse(res, 'Failed to delete image', constants.HTTP_STATUS_INTERNAL_SERVER_ERROR);
+  }
 }
