@@ -22,7 +22,7 @@ INSERT INTO "users" (
     "email", "password", "hp_number", "id_role", "created_by"
 ) VALUES (
     'admin@belimudah.com', 
-    '$2b$10$N9qo8uLOickgx2ZMRZoMy.Mr/.cZxqB1z5Y5sP8z7X9X9X9X9X9X9',
+    '$2b$10$0MBh.sz7Ce0sI9AID4gchussEpNgnlys9c/.nkVN8Qw2VavLmQTim',
     '081234567890', 
     (SELECT "id" FROM "roles" WHERE "name" = 'admin'), 
     NULL

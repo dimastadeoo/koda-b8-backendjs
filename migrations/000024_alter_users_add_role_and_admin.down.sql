@@ -1,14 +1,12 @@
 -- 1. Hapus profile admin
 DELETE FROM "profiles" 
-WHERE "id_user" IN (SELECT id FROM "users" WHERE "email" = 'admin@belimudah.com');
+WHERE "id_user" IN (SELECT "id" FROM "users" WHERE "email" = 'admin@belimudah.com');
 
 -- 2. Hapus user admin
 DELETE FROM "users" WHERE "email" = 'admin@belimudah.com';
 
--- 3. Hapus data roles
-DELETE FROM "roles" WHERE name IN ('admin', 'customer', 'staff');
-
--- 4. Hapus kolom dari users
+-- 3. [PERBAIKAN] Hapus dulu kolom id_role dan created_by 
+--    (ini akan otomatis menghapus foreign key constraint-nya)
 DO $$
 BEGIN
     IF EXISTS (SELECT 1 FROM information_schema.columns 
@@ -21,3 +19,6 @@ BEGIN
         ALTER TABLE "users" DROP COLUMN "created_by";
     END IF;
 END $$;
+
+-- 4. Sekarang baru aman untuk hapus roles (karena kolom id_role sudah tidak ada)
+DELETE FROM "roles" WHERE name IN ('admin', 'customer', 'staff');
