@@ -5,10 +5,7 @@ import { constants } from "node:http2";
 import pool from "../lib/conn.js";
 import fs from 'fs';
 import path from 'path';
-import { fileURLToPath } from 'url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+import {deleteFile} from '../lib/uploads.js'
 
 /**
  * 
@@ -119,11 +116,9 @@ export async function uploadPicture(req, res) {
     }
 
     // Jika ada gambar lama, hapus
-    if (profile.picture) {
-      const oldPath = path.join(__dirname, '../../uploads/profiles', profile.picture);
-      if (fs.existsSync(oldPath)) {
-        fs.unlinkSync(oldPath);
-      }
+    if (profile?.picture) {
+      // Hapus file lama
+      deleteFile(`profiles/${profile.picture}`);
     }
 
     // Update kolom picture dengan nama file baru
