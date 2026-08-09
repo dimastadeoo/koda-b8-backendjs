@@ -1,8 +1,9 @@
-import { findByEmail, createUser } from '../models/usersModels.js';
+import { findByEmail, createUser, findUserWithRole } from '../models/usersModels.js';
 import * as Response from "../lib/response.js";
 import { constants } from "node:http2";
 import libJwt from '../lib/jwt.js';
 import bcrypt from "bcrypt";
+import { getRoleByName } from '../models/rolesModels.js';
 import { createProfile } from '../models/profileModels.js';
 
 const saltRounds = 10;
@@ -18,6 +19,7 @@ export async function register(req, res) {
     if (!email || !password || !name) {
       return Response.errorResponse(res, 'Email Or password Or name required', constants.HTTP_STATUS_BAD_REQUEST);
     }
+    const customerRole = await getRoleByName("customer")
 
     const existing = await findByEmail(email);
     if (existing) {
@@ -25,7 +27,7 @@ export async function register(req, res) {
 
     }
     const hashedPassword = await bcrypt.hash(password, saltRounds);
-    const user = await createUser(email, hashedPassword);
+    const user = await createUser(email, hashedPassword, customerRole.id);
     const profile = await createProfile(user.id, name)
     const results = { name: profile.name, email: user.email };
 
@@ -50,14 +52,14 @@ export async function login(req, res) {
       return Response.errorResponse(res, 'Email and password required', constants.HTTP_STATUS_BAD_REQUEST);
     }
 
-    const user = await findByEmail(email);
+    const user = await findUserWithRole(email);
     const passwordCheck = await bcrypt.compare(password, user.password);
     if (!user || !passwordCheck) {
       return Response.errorResponse(res, 'User or password wrong', constants.HTTP_STATUS_UNAUTHORIZED);
     }
     
     const token = libJwt.sign({userId: user.id});
-    const results = { token: token, user: { email: user.email } };
+    const results = { token: token, user: { email: user.email, role: user.role_name } };
     Response.successResponse(res, `User ${user.email} Login successfully`, results);
 
   } catch (error) {
