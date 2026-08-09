@@ -1,3 +1,4 @@
+// src/lib/uploads.js
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
@@ -6,27 +7,34 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Tentukan folder upload
-const uploadDir = path.join(__dirname, '../../uploads/profiles');
+// Base upload directory: /uploads
+const baseUploadDir = path.join(__dirname, '../../uploads');
 
-// Buat folder jika belum ada
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
+// Pastikan folder base upload ada
+if (!fs.existsSync(baseUploadDir)) {
+  fs.mkdirSync(baseUploadDir, { recursive: true });
 }
 
-// Konfigurasi storage
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, uploadDir);
-  },
-  filename: (req, file, cb) => {
-    // Buat nama file unik: userId-timestamp.ext
-    const userId = req.user?.userId || Date.now();
-    const ext = path.extname(file.originalname);
-    const uniqueName = `${userId}-${Date.now()}${ext}`;
-    cb(null, uniqueName);
+// Fungsi untuk membuat storage dinamis berdasarkan subfolder
+const createStorage = (subfolder) => {
+  const uploadDir = path.join(baseUploadDir, subfolder);
+  if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
   }
-});
+
+  return multer.diskStorage({
+    destination: (req, file, cb) => {
+      cb(null, uploadDir);
+    },
+    filename: (req, file, cb) => {
+      // Format: fieldname-timestamp.ext (untuk menghindari duplikasi)
+      const ext = path.extname(file.originalname);
+      const baseName = path.basename(file.originalname, ext);
+      const uniqueName = `${baseName}-${Date.now()}${ext}`;
+      cb(null, uniqueName);
+    }
+  });
+};
 
 // Filter file: hanya gambar
 const fileFilter = (req, file, cb) => {
@@ -40,10 +48,32 @@ const fileFilter = (req, file, cb) => {
   }
 };
 
-// Limit ukuran: 5MB
-const limits = { fileSize: 5 * 1024 * 1024 };
+const limits = { fileSize: 2 * 1024 * 1024 }; // 2MB
 
-const upload = multer({ storage, fileFilter, limits });
+// Middleware untuk upload profile picture (single file)
+export const uploadProfilePicture = (req, res, next) => {
+  const storage = createStorage('profiles');
+  const upload = multer({ storage, fileFilter, limits }).single('picture');
+  upload(req, res, next);
+};
 
-// Middleware untuk single file dengan field name "picture"
-export const uploadProfilePicture = upload.single('picture');
+// Middleware untuk upload product images (multiple files)
+export const uploadProductImages = (req, res, next) => {
+  const storage = createStorage('products');
+  const upload = multer({ storage, fileFilter, limits }).array('images', 10); // max 10 images
+  upload(req, res, next);
+};
+
+// Fungsi untuk menghapus file dari disk
+export const deleteFile = (filePath) => {
+  if (!filePath) return;
+  const fullPath = path.join(baseUploadDir, filePath);
+  if (fs.existsSync(fullPath)) {
+    fs.unlinkSync(fullPath);
+  }
+};
+
+// Fungsi untuk mendapatkan path relatif dari base upload
+export const getUploadPath = (subfolder, filename) => {
+  return `${subfolder}/${filename}`;
+};
