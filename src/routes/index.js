@@ -10,6 +10,7 @@ import wishlistRouter from './whislistRoutes.js'
 import cartRouter from "./cartRoutes.js";
 import checkoutRouter from "./checkoutRoutes.js";
 import orderRouter from "./ordersRoutes.js";
+import adminRouter from './adminRoutes.js'
 
 const options = {
   definition: {
@@ -145,7 +146,21 @@ const options = {
               }
             }
           }
-        }
+        },
+        UserWithRole: {
+          type: "object",
+          properties: {
+            id: { type: "integer" },
+            email: { type: "string" },
+            hp_number: { type: "string", nullable: true },
+            created_at: { type: "string", format: "date-time" },
+            updated_at: { type: "string", format: "date-time" },
+            role_id: { type: "integer" },
+            role_name: { type: "string" },
+            created_by_email: { type: "string" },
+            created_by_id: { type: "integer" }
+          }
+        },
       },
     }
   },
@@ -167,6 +182,7 @@ router.use('/wishlist', wishlistRouter);
 router.use('/cart', cartRouter);
 router.use('/checkout', checkoutRouter);
 router.use('/orders', orderRouter);
+router.use("/admin", adminRouter);
 
 
 export default router;
