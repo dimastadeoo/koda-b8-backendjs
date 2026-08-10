@@ -18,6 +18,11 @@ import {
   deleteProductImage,
 } from "../controllers/productsController.js";
 
+import {
+  updateOrderStatus,
+  getOrdersAdmin
+} from "../controllers/ordersControllers.js"
+
 const router = Router();
 
 // Semua route admin membutuhkan authentication + admin role
@@ -636,5 +641,157 @@ router.post("/products/:id/images", uploadProductImages, addProductImages);
  *         description: Internal server error
  */
 router.delete("/products/images/:imageId", deleteProductImage);
+
+/**
+ * @openapi
+ * /admin/orders:
+ *   get:
+ *     tags:
+ *       - Admin - Orders
+ *     summary: Get all orders (admin)
+ *     description: Retrieve all orders with user details. Admin only.
+ *     security:
+ *       - token: []
+ *     responses:
+ *       200:
+ *         description: Orders retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 results:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: integer
+ *                       id_cart:
+ *                         type: integer
+ *                       id_shipping:
+ *                         type: integer
+ *                       id_payment:
+ *                         type: integer
+ *                       id_voucher:
+ *                         type: integer
+ *                         nullable: true
+ *                       address:
+ *                         type: string
+ *                       subtotal:
+ *                         type: integer
+ *                       discount:
+ *                         type: integer
+ *                       shipping_cost:
+ *                         type: integer
+ *                       total_payment:
+ *                         type: integer
+ *                       status:
+ *                         type: string
+ *                         enum: [in_progress, pending, paid, shipping, delivered, canceled, refunded]
+ *                       checkout_step:
+ *                         type: string
+ *                         enum: [init, address, shipping, payment, done]
+ *                       created_at:
+ *                         type: string
+ *                         format: date-time
+ *                       updated_at:
+ *                         type: string
+ *                         format: date-time
+ *                       user_email:
+ *                         type: string
+ *                       user_phone:
+ *                         type: string
+ *                         nullable: true
+ *                       shipping_name:
+ *                         type: string
+ *                       shipping_price:
+ *                         type: integer
+ *                       payment_name:
+ *                         type: string
+ *                       payment_type:
+ *                         type: string
+ *                       voucher_code:
+ *                         type: string
+ *                         nullable: true
+ *                       voucher_type:
+ *                         type: string
+ *                         nullable: true
+ *                       voucher_value:
+ *                         type: integer
+ *                         nullable: true
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden – admin only
+ *       500:
+ *         description: Internal server error
+ */
+router.get("/orders", getOrdersAdmin);
+
+/**
+ * @openapi
+ * /admin/orders/{orderId}/status:
+ *   patch:
+ *     tags:
+ *       - Admin - Orders
+ *     summary: Update order status
+ *     description: Update the status of an order. Admin only.
+ *     security:
+ *       - token: []
+ *     parameters:
+ *       - in: path
+ *         name: orderId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Order ID
+ *         example: 5
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/x-www-form-urlencoded:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - status
+ *             properties:
+ *               status:
+ *                 type: string
+ *                 enum: [in_progress, pending, paid, shipping, delivered, canceled, refunded]
+ *                 description: New order status
+ *                 example: shipping
+ *     responses:
+ *       200:
+ *         description: Order status updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Order status updated successfully
+ *                 results:
+ *                   $ref: '#/components/schemas/OrderDetail'
+ *       400:
+ *         description: Invalid status
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden – admin only
+ *       404:
+ *         description: Order not found
+ *       500:
+ *         description: Internal server error
+ */
+router.patch("/orders/:orderId/status", updateOrderStatus);
 
 export default router;
