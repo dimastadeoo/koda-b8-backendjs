@@ -443,3 +443,90 @@ export async function completeOrder(req, res) {
     client.release();
   }
 }
+
+/**
+ * 
+ * @param {import("express").Request} req 
+ * @param {import("express").Response} res 
+ */
+export async function updateOrderStatus(req, res) {
+  try {
+    const orderId = parseInt(req.params.orderId, 10);
+    if (isNaN(orderId)) {
+      return Response.errorResponse(res, 'Invalid order ID', constants.HTTP_STATUS_BAD_REQUEST);
+    }
+
+    const { status } = req.body;
+    const validStatuses = [
+      'in_progress',
+      'pending',
+      'paid',
+      'shipping',
+      'delivered',
+      'canceled',
+      'refunded'
+    ];
+    if (!status || !validStatuses.includes(status)) {
+      return Response.errorResponse(
+        res,
+        `Invalid status. Must be one of: ${validStatuses.join(', ')}`,
+        constants.HTTP_STATUS_BAD_REQUEST
+      );
+    }
+
+    // Cek order ada
+    const order = await ordersModel.getOrderByIdWithOrderId(orderId);
+    if (!order) {
+      return Response.errorResponse(res, 'Order not found', constants.HTTP_STATUS_NOT_FOUND);
+    }
+
+    // Jika status sudah sama, return
+    if (order.status === status) {
+      return Response.successResponse(res, 'Order status already ' + status, order);
+    }
+
+    // Update status
+    const updated = await ordersModel.updateOrderStatus(orderId, status);
+
+    // Jika status berubah menjadi 'canceled' atau 'refunded', kembalikan stok
+    if (status === 'canceled' || status === 'refunded') {
+      const items = await orderItemsModel.getOrderItems(orderId);
+      const client = await pool.connect();
+      try {
+        await client.query('BEGIN');
+        for (const item of items) {
+          await client.query(
+            'UPDATE products SET stock = stock + $1 WHERE id = $2',
+            [item.qty, item.id_product]
+          );
+        }
+        await client.query('COMMIT');
+      } catch (err) {
+        await client.query('ROLLBACK');
+        throw err;
+      } finally {
+        client.release();
+      }
+    }
+
+    Response.successResponse(res, 'Order status updated successfully', updated);
+  } catch (error) {
+    console.error(error);
+    Response.errorResponse(res, 'Failed to update order status', constants.HTTP_STATUS_INTERNAL_SERVER_ERROR);
+  }
+}
+
+/**
+ * 
+ * @param {import("express").Request} req 
+ * @param {import("express").Response} res 
+ */
+export async function getOrdersAdmin(req, res) {
+  try {
+    const orders = await ordersModel.getAllOrdersWithUserDetails();
+    Response.successResponse(res, 'Orders retrieved successfully', orders);
+  } catch (error) {
+    console.error(error);
+    Response.errorResponse(res, 'Failed to get orders', constants.HTTP_STATUS_INTERNAL_SERVER_ERROR);
+  }
+}
