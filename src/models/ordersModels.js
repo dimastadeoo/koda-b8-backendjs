@@ -140,3 +140,33 @@ export async function confirmOrder({orderId, subtotal, discount, shipping_cost, 
   );
   return result.rows[0];
 }
+
+export async function getAllOrdersWithUserDetails() {
+  const query = `
+    SELECT o.*, 
+           u.email as user_email, u.hp_number as user_phone,
+           ms.name as shipping_name, ms.price as shipping_price,
+           mp.name as payment_name, mp.payment_type,
+           v.code as voucher_code, v.type as voucher_type, v.value as voucher_value
+    FROM orders o
+    JOIN carts c ON o.id_cart = c.id
+    JOIN users u ON c.id_user = u.id
+    JOIN method_shippings ms ON o.id_shipping = ms.id
+    JOIN methods_payments mp ON o.id_payment = mp.id
+    LEFT JOIN vouchers v ON o.id_voucher = v.id
+    ORDER BY o.created_at DESC
+  `;
+  const result = await pool.query(query);
+  return result.rows;
+}
+
+export async function getOrderByIdWithOrderId(orderId) {
+  const query = `
+    SELECT * 
+    FROM orders
+    WHERE id = $1
+    ORDER BY created_at DESC
+  `;
+  const result = await pool.query(query, [orderId]);
+  return result.rows;
+}
