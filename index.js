@@ -1,3 +1,5 @@
+import 'babel-register'
+
 import express from 'express';
 import router from './src/routes/index.js';
 import corsMiddleware from './src/middlewares/corsMiddleware.js';
