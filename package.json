@@ -6,6 +6,7 @@
     "multer": "^2.2.0",
     "pg": "^8.22.0",
     "qs": "^6.15.3",
+    "sequelize": "^6.37.8",
     "swagger-jsdoc": "^6.3.0",
     "swagger-ui-express": "^5.0.1"
   },
@@ -15,7 +16,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "node --watch index.js"
+    "dev": "node --watch  index.js"
   },
   "repository": {
     "type": "git",
@@ -28,5 +29,9 @@
   "bugs": {
     "url": "https://github.com/dimastadeoo/koda-b8-backendjs/issues"
   },
-  "homepage": "https://github.com/dimastadeoo/koda-b8-backendjs#readme"
+  "homepage": "https://github.com/dimastadeoo/koda-b8-backendjs#readme",
+  "devDependencies": {
+    "babel-register": "^6.26.0",
+    "sequelize-cli": "^6.6.5"
+  }
 }
