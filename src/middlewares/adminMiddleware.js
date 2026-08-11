@@ -1,6 +1,6 @@
 import * as Response from "../lib/response.js";
 import { constants } from "node:http2";
-import * as userModel from "../models/usersModels.js";
+import * as userModel from "../models/users.models.js";
 
 export async function isAdmin(req, res, next) {
   try {

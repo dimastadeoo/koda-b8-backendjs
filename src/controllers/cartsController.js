@@ -1,6 +1,6 @@
-import * as cartModel from "../models/cartsModels.js";
+import * as cartModel from "../models/carts.models.js";
 import * as Response from "../lib/response.js";
-import { getProductById } from "../models/productsModels.js";
+import { getProductById } from "../models/products.models.js";
 import { constants } from "node:http2";
 
 /**

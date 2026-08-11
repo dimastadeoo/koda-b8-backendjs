@@ -1,6 +1,6 @@
-import * as wishlistModel from "../models/whislistModels.js";
+import * as wishlistModel from "../models/whislist.models.js";
 import * as Response from "../lib/response.js";
-import { findProfileByUserId } from "../models/profileModels.js";
+import { findProfileByUserId } from "../models/profile.models.js";
 import { constants } from "node:http2";
 
 

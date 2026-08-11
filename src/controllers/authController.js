@@ -1,10 +1,10 @@
-import { findByEmail, createUser, findUserWithRole } from '../models/usersModels.js';
+import { findByEmail, createUser, findUserWithRole } from '../models/users.models.js';
 import * as Response from "../lib/response.js";
 import { constants } from "node:http2";
 import libJwt from '../lib/jwt.js';
 import bcrypt from "bcrypt";
-import { getRoleByName } from '../models/rolesModels.js';
-import { createProfile } from '../models/profileModels.js';
+import { getRoleByName } from '../models/roles.models.js';
+import { createProfile } from '../models/profile.models.js';
 
 const saltRounds = 10;
 /**

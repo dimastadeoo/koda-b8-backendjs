@@ -1,7 +1,7 @@
-import * as productModel from "../models/productsModels.js";
+import * as productModel from "../models/products.models.js";
 import * as Response from "../lib/response.js";
-import * as ImageProductModel from "../models/productImageModels.js"
-import * as reviewModel from "../models/reviewsModels.js";
+import * as ImageProductModel from "../models/productImage.models.js"
+import * as reviewModel from "../models/reviews.models.js";
 import { constants } from "node:http2";
 import { deleteFile, getUploadPath } from "../lib/uploads.js";
 

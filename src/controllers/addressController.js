@@ -1,5 +1,5 @@
-import * as addressModel from "../models/addressModels.js";
-import * as profileModel from "../models/profileModels.js";
+import * as addressModel from "../models/address.models.js";
+import * as profileModel from "../models/profile.models.js";
 import * as Response from "../lib/response.js";
 import { constants } from "node:http2";
 

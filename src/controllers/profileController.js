@@ -1,5 +1,5 @@
-import * as profileModel from "../models/profileModels.js";
-import * as userModel from "../models/usersModels.js";
+import * as profileModel from "../models/profile.models.js";
+import * as userModel from "../models/users.models.js";
 import * as Response from "../lib/response.js";
 import { constants } from "node:http2";
 import pool from "../lib/conn.js";

@@ -1,12 +1,12 @@
 // src/controllers/orderController.js
-import * as ordersModel from "../models/ordersModels.js";
-import * as orderItemsModel from "../models/ordersItemModels.js";
-import * as cartsModel from "../models/cartsModels.js";
-import * as vouchersModel from "../models/vouchersModels.js";
-import * as methodPaymentsModel from "../models/paymentMethodsModels.js";
-import * as paymentTransactionsModel from "../models/paymentTransactionModels.js";
-import * as methodShippingsModel from "../models/shippingMethodsModels.js";
-import * as productModel from "../models/productsModels.js";
+import * as ordersModel from "../models/orders.models.js";
+import * as orderItemsModel from "../models/ordersItem.models.js";
+import * as cartsModel from "../models/carts.models.js";
+import * as vouchersModel from "../models/vouchers.models.js";
+import * as methodPaymentsModel from "../models/paymentMethods.models.js";
+import * as paymentTransactionsModel from "../models/paymentTransaction.models.js";
+import * as methodShippingsModel from "../models/shippingMethods.models.js";
+import * as productModel from "../models/products.models.js";
 import * as Response from "../lib/response.js";
 import { constants } from "node:http2";
 import pool from "../lib/conn.js";

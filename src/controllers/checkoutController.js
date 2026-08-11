@@ -1,5 +1,5 @@
-import * as methodPaymentsModel from "../models/paymentMethodsModels.js";
-import * as methodShippingsModel from "../models/shippingMethodsModels.js";
+import * as methodPaymentsModel from "../models/paymentMethods.models.js";
+import * as methodShippingsModel from "../models/shippingMethods.models.js";
 import * as Response from "../lib/response.js";
 import { constants } from "node:http2";
 

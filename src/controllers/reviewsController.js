@@ -1,4 +1,4 @@
-import * as reviewModel from "../models/reviewsModels.js";
+import * as reviewModel from "../models/reviews.models.js";
 import * as Response from "../lib/response.js";
 import { constants } from "node:http2";
 
