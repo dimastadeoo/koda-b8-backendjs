@@ -141,11 +141,15 @@ router.patch("/", updateProfile);
  *             type: object
  *             required:
  *               - email
+ *               - password
  *             properties:
  *               email:
  *                 type: string
  *                 format: email
  *                 example: newemail@mail.com
+ *               password:
+ *                 type: string
+ *                 format: password
  *     responses:
  *       200:
  *         description: Email updated successfully

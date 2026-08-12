@@ -2,10 +2,12 @@ import * as userModel from "../models/users.models.js";
 import * as roleModel from "../models/roles.models.js";
 import * as profileModel from "../models/profile.models.js"
 import * as Response from "../lib/response.js";
+import db from '../models/index.cjs'
 import { constants } from "node:http2";
 import bcrypt from "bcrypt";
 
 const saltRounds = 10;
+const {Users, Profiles, Roles} = db
 
 /**
  * Update email user
@@ -22,7 +24,7 @@ export async function updateEmail(req, res) {
     }
 
     // Ambil user dari database
-    const user = await userModel.findById(userId);
+    const user = await Users.findByPk(userId);
     if (!user) {
       return Response.errorResponse(res, 'User not found', constants.HTTP_STATUS_NOT_FOUND);
     }
@@ -33,19 +35,31 @@ export async function updateEmail(req, res) {
       return Response.errorResponse(res, 'Invalid password', constants.HTTP_STATUS_UNAUTHORIZED);
     }
 
-    // Cek apakah email baru sudah digunakan oleh user lain
-    const existingUser = await userModel.findByEmail(email);
-    if (existingUser && existingUser.id !== userId) {
+    const data = await Users.findAll()
+    const existing = data.find(u => u.email === email)
+
+    if (existing?.email === email && existing?.id === userId){
+      return Response.errorResponse(res, 'The email change cannot be the same as the old one', constants.HTTP_STATUS_BAD_REQUEST);
+    }
+
+    if (existing && existing.id !== userId) {
       return Response.errorResponse(res, 'Email already used by another user', constants.HTTP_STATUS_BAD_REQUEST);
     }
 
     // Update email
-    const updatedUser = await userModel.updateUserEmail(userId, email);
+    await Users.update({
+      email: email
+    },{
+      where:{
+          id: userId
+      }
+    })
+    const userUpdate = await Users.findByPk(userId, {
+      attributes: { exclude: ['password', 'id', 'id_role'] },
+    })
 
     Response.successResponse(res, 'Email updated successfully', {
-      id: updatedUser.id,
-      email: updatedUser.email,
-      hp_number: updatedUser.hp_number
+      userUpdate,
     });
 
   } catch (error) {
