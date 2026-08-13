@@ -4,6 +4,7 @@ import * as ImageProductModel from "../models/productImage.models.js"
 import * as reviewModel from "../models/reviews.models.js";
 import { constants } from "node:http2";
 import { deleteFile, getUploadPath } from "../lib/uploads.js";
+import redis from "../lib/redis.js";
 
 
 /**
@@ -93,31 +94,41 @@ export async function getProducts(req, res) {
  * @param {import("express").Response} res 
  */
 export async function getProductById(req, res) {
-    try {
-        const { id } = req.params;
-        const product = await productModel.getProductById(id);
-       
-        if (!product) {
-            return Response.errorResponse(res, 'Product not found', constants.HTTP_STATUS_NOT_FOUND);
-        }
-        
-        // Ambil gambar produk dari model imgProduct
-        const images = await ImageProductModel.getProductImages(id);
-        const ratingStats = await reviewModel.getProductRatingStats(id);
-
-        // Gabungkan hasil
-        const result = {
-          ...product,
-          images,
-          average_rating: parseFloat(ratingStats.avg_rating),
-          total_reviews: parseInt(ratingStats.total_reviews, 10),
-        };
-
-        Response.successResponse(res, 'Product retrieved successfully', result);
-    } catch (error) {
-        console.error(error);
-        Response.errorResponse(res, 'Failed to get product', constants.HTTP_STATUS_INTERNAL_SERVER_ERROR);
+  try {
+    const { id } = req.params;
+    
+    const endpoint = req.originalUrl
+    const cacheRedis = await redis.get(endpoint)
+    
+    let product
+    if (!cacheRedis) {
+      product = await productModel.getProductById(id);
+      await redis.set(endpoint, JSON.stringify(product))
+    }else{
+      product = JSON.parse(cacheRedis)
     }
+    
+    if (!product) {
+        return Response.errorResponse(res, 'Product not found', constants.HTTP_STATUS_NOT_FOUND);
+    }
+    
+    // Ambil gambar produk dari model imgProduct
+    const images = await ImageProductModel.getProductImages(id);
+    const ratingStats = await reviewModel.getProductRatingStats(id);
+
+    // Gabungkan hasil
+    const result = {
+      ...product,
+      images,
+      average_rating: parseFloat(ratingStats.avg_rating),
+      total_reviews: parseInt(ratingStats.total_reviews, 10),
+    };
+
+    Response.successResponse(res, 'Product retrieved successfully', result);
+  } catch (error) {
+    console.error(error);
+    Response.errorResponse(res, 'Failed to get product', constants.HTTP_STATUS_INTERNAL_SERVER_ERROR);
+  }
 }
 
 /**
@@ -213,6 +224,13 @@ export async function updateProduct(req, res) {
     const existing = await productModel.getProductById(productId);
     if (!existing) {
       return Response.errorResponse(res, 'Product not found', constants.HTTP_STATUS_NOT_FOUND);
+    }
+
+    const endpoint = req.originalUrl.slice('/admin'.length)
+    const cacheRedis = await redis.get(endpoint)
+
+    if (cacheRedis){
+      await redis.DEL(endpoint)
     }
 
     const updated = await productModel.updateProduct(productId, {
