@@ -1,6 +1,6 @@
-import * as userModel from "../models/users.models.js";
-import * as roleModel from "../models/roles.models.js";
-import * as profileModel from "../models/profile.models.js"
+// import * as userModel from "../models/users.models.js";
+// import * as roleModel from "../models/roles.models.js";
+// import * as profileModel from "../models/profile.models.js"
 import * as Response from "../lib/response.js";
 import db from '../models/index.cjs'
 import { constants } from "node:http2";
@@ -192,7 +192,8 @@ export async function getUserById(req, res) {
           required: false,
         },
       attributes: {
-        include: [[sequelize.col('role.name'), 'role_name'],]
+        include: [[sequelize.col('role.name'), 'role_name'],],
+        exclude: ['password']
       }
     });
     if (!user) {
@@ -221,28 +222,29 @@ export async function createUser(req, res) {
     }
 
     // Cek apakah email sudah ada
-    const existing = await userModel.findByEmail(email);
+    const existing = await Users.findOne({ where: { email: email } });
     if (existing) {
       return Response.errorResponse(res, 'Email already exists', constants.HTTP_STATUS_BAD_REQUEST);
     }
 
     // Dapatkan role berdasarkan name
-    const role = await roleModel.getRoleByName(roleName);
+    const role = await Roles.findOne({ where: { name: roleName } });
     if (!role) {
       return Response.errorResponse(res, 'Invalid role name', constants.HTTP_STATUS_BAD_REQUEST);
     }
 
     const hashedPassword = await bcrypt.hash(password, saltRounds);
-    const user = await userModel.createUserWithRole(
-      email, 
-      hashedPassword,  
-      hp_number || null, 
-      role.id, 
-      adminId
-    );
+
+    const user = await Users.create({
+      email: email, 
+      password: hashedPassword,  
+      hp_number: hp_number, 
+      id_role:role.id, 
+      created_by: adminId
+    });
 
     // Buat profile
-    const profile = await profileModel.createProfile(user.id, name);
+    const profile = await Profiles.create({id_user: user.id, name: name});
 
     const results = {
       id: user.id,
@@ -277,28 +279,44 @@ export async function updateUser(req, res) {
       return Response.errorResponse(res, 'At least one field to update', constants.HTTP_STATUS_BAD_REQUEST);
     }
 
-    const user = await userModel.findById(userId);
+    const user = await Users.findByPk(userId);
     if (!user) {
       return Response.errorResponse(res, 'User not found', constants.HTTP_STATUS_NOT_FOUND);
     }
 
     let id_role = user.id_role;
     if (roleName) {
-      const role = await roleModel.getRoleByName(roleName);
+      const role = await Roles.findOne({ where: { name: roleName } });
       if (!role) {
         return Response.errorResponse(res, 'Invalid role name', constants.HTTP_STATUS_BAD_REQUEST);
       }
       id_role = role.id;
     }
 
-    const updateData = {
+    // Update password
+    await Users.update({
       email: email || user.email,
       hp_number: hp_number !== undefined ? hp_number : user.hp_number,
       id_role: id_role
-    };
+    },{
+      where:{
+        id: userId
+      }
+    })
 
-    const updated = await userModel.updateUser(userId, updateData);
-    const result = await userModel.findUserByIdWithRole(updated.id);
+    // const result = await userModel.findUserByIdWithRole(updated.id);
+    const result = await Users.findByPk(userId, {
+      include: {
+          model: Roles,
+          as: 'role',
+          attributes: [],
+          required: false,
+        },
+      attributes: {
+        include: [[sequelize.col('role.name'), 'role_name'],],
+        exclude: ['password']
+      }
+    });
 
     Response.successResponse(res, 'User updated successfully', result);
   } catch (error) {
@@ -325,7 +343,11 @@ export async function deleteUser(req, res) {
       return Response.errorResponse(res, 'Cannot delete yourself', constants.HTTP_STATUS_BAD_REQUEST);
     }
 
-    const deleted = await userModel.deleteUserById(userId);
+    const deleted = await Users.destroy({
+      where:{
+        id: userId
+      }
+    });
     if (!deleted) {
       return Response.errorResponse(res, 'User not found', constants.HTTP_STATUS_NOT_FOUND);
     }
@@ -344,7 +366,7 @@ export async function deleteUser(req, res) {
  */
 export async function getRoles(req, res) {
   try {
-    const roles = await roleModel.getAllRoles();
+    const roles = await Roles.findAll();
     Response.successResponse(res, 'Roles retrieved successfully', roles);
   } catch (error) {
     console.error(error);
