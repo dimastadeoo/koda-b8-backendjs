@@ -7,7 +7,7 @@ import { constants } from "node:http2";
 import bcrypt from "bcrypt";
 
 const saltRounds = 10;
-const {Users, Profiles, Roles} = db
+const {Users, Profiles, Roles, sequelize} = db
 
 /**
  * Update email user
@@ -86,8 +86,12 @@ export async function updatePassword(req, res) {
       return Response.errorResponse(res, 'New password must be at least 6 characters', constants.HTTP_STATUS_BAD_REQUEST);
     }
 
+    if (newPassword === oldPassword) {
+      return Response.errorResponse(res, 'New password not be same to Old Password', constants.HTTP_STATUS_BAD_REQUEST);
+    }
+
     // Ambil user
-    const user = await userModel.findById(userId);
+    const user = await Users.findByPk(userId);
     if (!user) {
       return Response.errorResponse(res, 'User not found', constants.HTTP_STATUS_NOT_FOUND);
     }
@@ -100,9 +104,16 @@ export async function updatePassword(req, res) {
 
     // Hash password baru
     const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
-    await userModel.updateUserPassword(userId, hashedPassword);
+    // Update password
+    await Users.update({
+      password: hashedPassword
+    },{
+      where:{
+          id: userId
+      }
+    })
 
-    Response.successResponse(res, 'Password updated successfully');
+    Response.successResponse(res, `Password ${Users.name} updated successfully`);
 
   } catch (error) {
     console.error(error);
@@ -117,7 +128,43 @@ export async function updatePassword(req, res) {
  */
 export async function getUsers(req, res) {
   try {
-    const users = await userModel.getAllUsersWithRole();
+    const users = await Users.findAll({
+      include: [
+        {
+          model: Profiles,
+          as: 'profile',
+          attributes: [],
+          required: false,
+        },
+        {
+          model: Roles,
+          as: 'role',
+          attributes: [],
+          required: false,
+        },
+        {
+          model: Users,
+          as: 'creator',
+          attributes: [],
+          required: false,
+        },
+      ],
+      
+      attributes: [
+        'id',
+        'email',
+        [sequelize.col('profile.name'), 'name'],
+        'hp_number',
+        'created_at',
+        'updated_at',
+        [sequelize.col('role.id'), 'role_id'],
+        [sequelize.col('role.name'), 'role_name'],
+        [sequelize.col('creator.email'), 'created_by_email'],
+      ],
+
+      order: [['created_at', 'DESC']],
+    });
+
     Response.successResponse(res, 'Users retrieved successfully', users);
   } catch (error) {
     console.error(error);
@@ -137,7 +184,17 @@ export async function getUserById(req, res) {
       return Response.errorResponse(res, 'Invalid user ID', constants.HTTP_STATUS_BAD_REQUEST);
     }
     
-    const user = await userModel.findUserByIdWithRole(userId);
+    const user = await Users.findByPk(userId, {
+      include: {
+          model: Roles,
+          as: 'role',
+          attributes: [],
+          required: false,
+        },
+      attributes: {
+        include: [[sequelize.col('role.name'), 'role_name'],]
+      }
+    });
     if (!user) {
       return Response.errorResponse(res, 'User not found', constants.HTTP_STATUS_NOT_FOUND);
     }
