@@ -55,6 +55,12 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false
     },
 
+    hp_number: {
+      type: DataTypes.STRING(20),
+      allowNull: true,
+      unique: true
+    },
+
     id_role: {
       type: DataTypes.BIGINT,
       allowNull: true
