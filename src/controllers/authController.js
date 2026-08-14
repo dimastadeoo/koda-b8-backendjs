@@ -32,7 +32,7 @@ export async function register(req, res) {
     }
 
     const hashedPassword = await bcrypt.hash(password, saltRounds);
-    const user = await await Users.create({
+    const user = await Users.create({
       email: email, password:hashedPassword, id_role:customerRole.id
     });
     await Profiles.create({name: name, id_user: user.id})
