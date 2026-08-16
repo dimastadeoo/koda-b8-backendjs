@@ -1,11 +1,18 @@
 import * as addressModel from "../models/address.models.js";
 import * as profileModel from "../models/profile.models.js";
+import db from '../models/index.cjs'
 import * as Response from "../lib/response.js";
 import { constants } from "node:http2";
 
+const {Users, Profiles, sequelize, Addresses} = db
+
 // Get profile id
 async function getProfileIdByUserId(userId) {
-    const profile = await profileModel.findProfileByUserId(userId);
+    const profile = await Profiles.findOne({
+      where: {
+        id_user: userId,
+        },
+    });
     if (!profile) {
         throw new Error("Profile not found");
     }
@@ -21,9 +28,9 @@ export async function getAddresses(req, res) {
     try {
         const userId = req.user.userId;
         const profileId = await getProfileIdByUserId(userId);
-
-        const addresses = await addressModel.findAddressesByProfileId(profileId);
-        Response.successResponse(res, "Addresses retrieved successfully", addresses);
+        console.log(userId)
+        const address = await Addresses.findAll({where: {id_profile:profileId}})
+        Response.successResponse(res, "Addresses retrieved successfully", address);
     } catch (error) {
         console.error(error);
         Response.errorResponse(res, "Failed to get addresses", constants.HTTP_STATUS_INTERNAL_SERVER_ERROR);
