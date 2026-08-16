@@ -3,6 +3,7 @@ import * as addressModel from "../models/address.models.js";
 import db from '../models/index.cjs'
 import * as Response from "../lib/response.js";
 import { constants } from "node:http2";
+import { where } from "sequelize";
 
 const {Users, Profiles, sequelize, Addresses} = db
 
@@ -116,7 +117,7 @@ export async function updateAddress(req, res) {
         const { label, receiver_name, detail_address, province, city, district, village, is_primary } = req.body;
 
         // Pastikan address milik user ini
-        const existing = await addressModel.findAddressById(addressId);
+        const existing = await Addresses.findByPk(addressId);
         if (!existing) {
             return Response.errorResponse(res, "Address not found", constants.HTTP_STATUS_NOT_FOUND);
         }
@@ -126,21 +127,39 @@ export async function updateAddress(req, res) {
 
         // Jika is_primary true, unset primary lainnya dulu
         if (is_primary) {
-            await addressModel.unsetPrimaryAddress(profileId);
+            await Addresses.update({
+                is_primary: false,
+            },{
+                where: {
+                id_profile: profileId,
+                is_primary: true,
+                },
+            });
         }
 
-        const updated = await addressModel.updateAddress(addressId, {
-            label,
-            receiver_name,
-            detail_address,
-            province,
-            city,
-            district,
-            village,
-            is_primary
+        await Addresses.update({
+            label: label,
+            receiver_name: receiver_name,
+            detail_address: detail_address,
+            province: province,
+            city: city,
+            district: district,
+            village: village,
+            is_primary: is_primary
+        }, {
+            where:{
+                id: addressId,
+                id_profile: profileId
+            }
         });
 
-        Response.successResponse(res, "Address updated successfully", updated);
+        const result = await Addresses.findByPk(addressId, {
+            attributes:{
+                exclude: ["id_profile"],
+            }
+        })
+
+        Response.successResponse(res, "Address updated successfully", result);
     } catch (error) {
         console.error(error);
         Response.errorResponse(res, "Failed to update address", constants.HTTP_STATUS_INTERNAL_SERVER_ERROR);
@@ -159,7 +178,7 @@ export async function deleteAddress(req, res) {
 
         const addressId = parseInt(req.params.id);
 
-        const existing = await addressModel.findAddressById(addressId);
+        const existing = await Addresses.findByPk(addressId);
         if (!existing) {
             return Response.errorResponse(res, "Address not found", constants.HTTP_STATUS_NOT_FOUND);
         }
@@ -167,18 +186,18 @@ export async function deleteAddress(req, res) {
             return Response.errorResponse(res, "Forbidden", constants.HTTP_STATUS_FORBIDDEN);
         }
 
-        const deleted = await addressModel.deleteAddress(addressId);
+        const deleted = await Addresses.destroy({where: {id: addressId}});
 
         // Jika yang dihapus adalah primary, set address lain menjadi primary (ambil yang terbaru)
         if (existing.is_primary) {
-            const remaining = await addressModel.findAddressesByProfileId(profileId);
+            const remaining = await Addresses.findAll({where: {id_profile: profileId}});
             if (remaining.length > 0) {
                 // Set address pertama menjadi primary
-                await addressModel.updateAddress(remaining[0].id, { is_primary: true });
+                await Addresses.update({ is_primary: true }, {where: {id: remaining[0].id, id_profile: profileId}});
             }
         }
 
-        Response.successResponse(res, "Address deleted successfully", deleted);
+        Response.successResponse(res, "Address deleted successfully");
     } catch (error) {
         console.error(error);
         Response.errorResponse(res, "Failed to delete address", constants.HTTP_STATUS_INTERNAL_SERVER_ERROR);
@@ -197,7 +216,7 @@ export async function setPrimaryAddress(req, res) {
 
         const addressId = parseInt(req.params.id);
 
-        const existing = await addressModel.findAddressById(addressId);
+        const existing = await Addresses.findByPk(addressId);
         if (!existing) {
             return Response.errorResponse(res, "Address not found", constants.HTTP_STATUS_NOT_FOUND);
         }
@@ -206,12 +225,19 @@ export async function setPrimaryAddress(req, res) {
         }
 
         // Unset semua primary
-        await addressModel.unsetPrimaryAddress(profileId);
+         await Addresses.update({
+            is_primary: false,
+        },{
+            where: {
+            id_profile: profileId,
+            is_primary: true,
+            },
+        });
 
         // Set address ini menjadi primary
-        const updated = await addressModel.updateAddress(addressId, { is_primary: true });
+        await Addresses.update({ is_primary: true }, {where: {id: addressId, id_profile: profileId}});
 
-        Response.successResponse(res, "Primary address updated successfully", updated);
+        Response.successResponse(res, "Primary address updated successfully");
     } catch (error) {
         console.error(error);
         Response.errorResponse(res, "Failed to set primary address", constants.HTTP_STATUS_INTERNAL_SERVER_ERROR);
