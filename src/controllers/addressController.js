@@ -1,5 +1,5 @@
 import * as addressModel from "../models/address.models.js";
-import * as profileModel from "../models/profile.models.js";
+// import * as profileModel from "../models/profile.models.js";
 import db from '../models/index.cjs'
 import * as Response from "../lib/response.js";
 import { constants } from "node:http2";
@@ -61,27 +61,41 @@ export async function createAddress(req, res) {
         // Jika is_primary tidak diberikan, cek apakah ini address pertama user
         let primary = is_primary;
         if (primary === undefined) {
-            const existing = await addressModel.findAddressesByProfileId(profileId);
+            const existing = await Addresses.findAll({where: {id_profile:profileId}})
             primary = existing.length === 0; // jika belum ada address, jadi primary
         }
 
         // Jika ingin set primary, unset primary lainnya
         if (primary) {
-            await addressModel.unsetPrimaryAddress(profileId);
+            await Addresses.update({
+                is_primary: false,
+            },{
+                where: {
+                id_profile: profileId,
+                is_primary: true,
+                },
+            });
         }
 
-        const newAddress = await addressModel.createAddress(profileId, {
+        const newAddress = await Addresses.create({
+            id_profile: profileId,
             label: label || 'Rumah',
-            receiver_name,
-            detail_address,
-            province,
-            city,
-            district,
-            village,
+            receiver_name: receiver_name,
+            detail_address: detail_address,
+            province: province,
+            city: city,
+            district: district,
+            village: village,
             is_primary: primary
         });
 
-        Response.successResponse(res, "Address created successfully", newAddress, constants.HTTP_STATUS_CREATED);
+        const result = await Addresses.findByPk(newAddress.id, {
+            attributes:{
+                exclude: ["id_profile"],
+            }
+        })
+
+        Response.successResponse(res, "Address created successfully", result, constants.HTTP_STATUS_CREATED);
     } catch (error) {
         console.error(error);
         Response.errorResponse(res, "Failed to create address", constants.HTTP_STATUS_INTERNAL_SERVER_ERROR);
