@@ -2,12 +2,10 @@ import * as productModel from "../models/products.models.js";
 import * as Response from "../lib/response.js";
 import * as ImageProductModel from "../models/productImage.models.js"
 import * as reviewModel from "../models/reviews.models.js";
-import db from '../models/index.cjs';
 import { constants } from "node:http2";
 import { deleteFile, getUploadPath } from "../lib/uploads.js";
 import redis from "../lib/redis.js";
 
-const {Merk, Product, Category, ProductSpecification, ImgProduct, sequelize} = db
 
 /**
  * 
@@ -104,48 +102,7 @@ export async function getProductById(req, res) {
     
     let product
     if (!cacheRedis) {
-      product = await Product.findByPk(id, {
-
-        attributes: [
-          'id',
-          'name',
-          'price',
-          'stock',
-          'description',
-          'created_at',
-          'updated_at',
-          [sequelize.col('merk.id'), 'merk_id'],
-          [sequelize.col('merk.name'), 'merk_name'],
-        ],
-        include: [
-          {
-            model: Merk,
-            as: 'merk',
-            attributes: [],
-            required: false,
-          },
-
-          {
-            model: Category,
-            as: 'categories',
-            attributes: ['id', 'name'],
-            through: {
-              attributes: [],
-            },
-            required: false,
-          },
-
-          {
-            model: ProductSpecification,
-            as: 'specifications',
-            attributes: ['key', 'value'],
-            required: false,
-          },
-        ],
-        raw: true,
-        nest: true,
-      });
-
+      product = await productModel.getProductById(id);
       await redis.set(endpoint, JSON.stringify(product))
     }else{
       product = JSON.parse(cacheRedis)
@@ -156,15 +113,7 @@ export async function getProductById(req, res) {
     }
     
     // Ambil gambar produk dari model imgProduct
-    const images = await ImgProduct.findAll({
-      where: {id_product: id},
-      attributes: [
-        "id", "url_img", "sort_order", "is_primary", "alt_text"
-      ],
-      order: [['sort_order', 'ASC'], ['id', 'ASC']],
-
-
-    });
+    const images = await ImageProductModel.getProductImages(id);
     const ratingStats = await reviewModel.getProductRatingStats(id);
 
     // Gabungkan hasil
