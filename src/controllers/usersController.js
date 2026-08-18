@@ -2,12 +2,12 @@
 // import * as roleModel from "../models/roles.models.js";
 // import * as profileModel from "../models/profile.models.js"
 import * as Response from "../lib/response.js";
-import db from '../models/index.cjs'
+import db from '../models/index.cjs';
 import { constants } from "node:http2";
 import bcrypt from "bcrypt";
 
 const saltRounds = 10;
-const {Users, Profiles, Roles, sequelize} = db
+const {Users, Profiles, Roles, sequelize} = db;
 
 /**
  * Update email user

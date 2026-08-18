@@ -1,11 +1,32 @@
-import * as profileModel from "../models/profile.models.js";
-import * as userModel from "../models/users.models.js";
+// import * as profileModel from "../models/profile.models.js";
+// import * as userModel from "../models/users.models.js";
 import * as Response from "../lib/response.js";
+import db from '../models/index.cjs';
 import { constants } from "node:http2";
 import pool from "../lib/conn.js";
 import fs from 'fs';
 import path from 'path';
-import {deleteFile} from '../lib/uploads.js'
+import {deleteFile} from '../lib/uploads.js';
+
+const {Users, Profiles, Roles, sequelize} = db;
+
+
+async function getProfileByUserId(userId) {
+  const profile = await Profiles.findOne({
+    where:{id_user:userId},
+    include:{
+      model: Users,
+      as: "user",
+      attributes: [],
+      required: false
+    },
+    attributes: {
+      include: [[sequelize.col('user.hp_number'), 'hp_number'],[sequelize.col('user.email'), 'email'],]
+    }
+  });
+  return profile
+
+}
 
 /**
  * 
@@ -15,7 +36,7 @@ import {deleteFile} from '../lib/uploads.js'
 export async function getProfile(req, res) {
   try {
     const userId = req.user.userId;
-    const profile = await profileModel.findProfileByUserId(userId);
+    const profile = await getProfileByUserId(userId)
 
     if (!profile) {
       return Response.errorResponse(res, "Profile not found", constants.HTTP_STATUS_NOT_FOUND);
@@ -44,36 +65,48 @@ export async function updateProfile(req, res) {
     }
 
     // Cek apakah profile sudah ada (untuk menentukan create/update)
-    const existingProfile = await profileModel.findProfileByUserId(userId);
+    const existingProfile = await getProfileByUserId(userId)
 
     // Mulai transaksi
     const client = await pool.connect();
     try {
       await client.query('BEGIN');
 
+      console.log(hp_number)
       // 1. Update hp_number di users jika diberikan
-      let updatedUser = null;
       if (hp_number !== undefined) {
         // Cek duplikat hp_number (kecuali milik sendiri)
-        const existingUser = await userModel.findByNoHp(hp_number, client);
+        const existingUser = await Users.findOne({where: {hp_number: hp_number}});
         if (existingUser && existingUser.id !== userId) {
           await client.query('ROLLBACK');
-          return Response.errorResponse(res, "No HP already used by another user", constants.HTTP_STATUS_BAD_REQUEST);
+          return Response.errorResponse(res, "Hp Number already used by another user", constants.HTTP_STATUS_BAD_REQUEST);
         }
+
         // Update hp_number
-        updatedUser = await userModel.updateUserPhone(userId, hp_number, client);
+        await Users.update({
+          hp_number: hp_number
+        },{
+          where: {id: userId}
+        })
       }
 
       // 2. Update atau create profile
       let profile;
       if (existingProfile) {
-        profile = await profileModel.updateProfile(userId, { name, gender, place_birth, date_birth }, client);
+        profile = await Profiles.update({ 
+          name: name, 
+          gender: gender, 
+          place_birth: place_birth, 
+          date_birth: date_birth 
+        },{
+          where: {id_user: userId}
+        });
       }
 
       await client.query('COMMIT');
 
       // Ambil data terakhir (join dengan users) untuk response
-      const finalProfile = await profileModel.findProfileByUserId(userId);
+      const finalProfile = await getProfileByUserId(userId)
 
       Response.successResponse(
         res,
@@ -110,7 +143,7 @@ export async function uploadPicture(req, res) {
     }
 
     // Ambil profile user
-    const profile = await profileModel.findProfileByUserId(userId);
+    const profile = await getProfileByUserId(userId);
     if (!profile) {
       return Response.errorResponse(res, 'Profile not found, please update profile first', constants.HTTP_STATUS_NOT_FOUND);
     }
@@ -122,10 +155,16 @@ export async function uploadPicture(req, res) {
     }
 
     // Update kolom picture dengan nama file baru
-    await profileModel.updateProfilePicture(userId, req.file.filename)
+    await Profiles.update({
+      picture: req.file.filename
+    },{
+      where: {
+        id_user: userId
+      }
+    })
 
     // Ambil data terbaru
-    const finalProfile = await profileModel.findProfileByUserId(userId);
+    const finalProfile = await getProfileByUserId(userId);
 
     Response.successResponse(res, 'Profile picture updated successfully', finalProfile);
   } catch (error) {

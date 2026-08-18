@@ -107,7 +107,7 @@ router.get("/", getProfile);
  *                 format: date
  *                 description: Date of birth in YYYY-MM-DD format (optional)
  *                 example: 1990-01-01
- *               no_hp:
+ *               hp_number:
  *                 type: string
  *                 description: Phone number (optional, must be unique)
  *                 example: 08123456789
