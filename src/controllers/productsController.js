@@ -2,9 +2,12 @@ import * as productModel from "../models/products.models.js";
 import * as Response from "../lib/response.js";
 import * as ImageProductModel from "../models/productImage.models.js"
 import * as reviewModel from "../models/reviews.models.js";
+import db from '../models/index.cjs';
 import { constants } from "node:http2";
 import { deleteFile, getUploadPath } from "../lib/uploads.js";
 import redis from "../lib/redis.js";
+
+const {Products, Categories, ProductSpecifications, ImgProducts, Merks} = db
 
 
 /**
@@ -88,6 +91,8 @@ export async function getProducts(req, res) {
   }
 }
 
+
+
 /**
  * 
  * @param {import("express").Request} req 
@@ -138,7 +143,7 @@ export async function getProductById(req, res) {
  */
 export async function getMerks(req, res) {
     try {
-        const merks = await productModel.getMerks();
+        const merks = await Merks.findAll({order: ['name']});
         Response.successResponse(res, 'Merks retrieved successfully', merks);
     } catch (error) {
         console.error(error);
@@ -153,7 +158,7 @@ export async function getMerks(req, res) {
  */
 export async function getCategories(req, res) {
     try {
-        const categories = await productModel.getCategories();
+        const categories = await Categories.findAll({order: ['name']});
         Response.successResponse(res, 'Categories retrieved successfully', categories);
     } catch (error) {
         console.error(error);
@@ -174,8 +179,8 @@ export async function createProduct(req, res) {
     }
 
     // 1. Create product
-    const product = await productModel.createProduct({
-      name, price, id_merk: id_merk || null, stock: stock || 0, description
+    const product = await Products.create({
+      name: name, price: price, id_merk: id_merk || null, stock: stock || 0, description: description
     });
 
     // 2. Handle uploaded images (if any)
@@ -187,7 +192,16 @@ export async function createProduct(req, res) {
         is_primary: index === 0,
         alt_text: name
       }));
-      await ImageProductModel.insertProductImages(product.id, images);
+      images.forEach(async function(img) {
+        await ImgProducts.create({
+          id_product: product.id,
+          url_img: img.url_img,
+          sort_order: img.sort_order,
+          is_primary: img.is_primary,
+          alt_text: img.alt_text
+        })
+      });
+      // await ImageProductModel.insertProductImages(product.id, images);
     }
 
     // 3. Get product with images
