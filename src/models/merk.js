@@ -3,14 +3,14 @@ const {
   Model
 } = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
-  class Merk extends Model {
+  class Merks extends Model {
     /**
      * Helper method for defining associations.
      * This method is not a part of Sequelize lifecycle.
      * The `models/index` file will call this method automatically.
      */
     static associate(models) {
-      Merk.hasMany(models.Product, {
+      Merks.hasMany(models.Products, {
         foreignKey: 'id_merk',
         sourceKey: 'id',
         as: 'products',
@@ -18,7 +18,7 @@ module.exports = (sequelize, DataTypes) => {
     }
   }
 
-  Merk.init(
+  Merks.init(
     {
       id: {
         type: DataTypes.BIGINT,
@@ -49,7 +49,7 @@ module.exports = (sequelize, DataTypes) => {
     },
     {
       sequelize,
-      modelName: 'Merk',
+      modelName: 'Merks',
       tableName: 'merks',
 
       timestamps: true,
@@ -58,5 +58,5 @@ module.exports = (sequelize, DataTypes) => {
     }
   );
 
-  return Merk;
+  return Merks;
 };
